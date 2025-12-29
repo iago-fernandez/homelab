@@ -1,0 +1,10 @@
+.env
+.DS_store
+*.log
+*.key
+*.crt
+*.pem
+wg0.conf
+/data
+/config/
+!/config/examples/
