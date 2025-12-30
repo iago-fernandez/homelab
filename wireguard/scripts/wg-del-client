@@ -1,0 +1,22 @@
+#!/bin/bash
+# Script to remove a WireGuard client
+set -euo pipefail
+
+[ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
+
+n="${1:-}"
+[ -n "$n" ] || { echo "Usage: wg-del-client <name>"; exit 1; }
+
+d="/etc/wireguard/clients/$n"
+[ -d "$d" ] || { echo "Client directory does not exist: $d"; exit 2; }
+
+# Remove peer from WireGuard interface
+pub="$(cat "$d/public.key" 2>/dev/null || true)"
+[ -n "$pub" ] && wg set wg0 peer "$pub" remove || true
+
+# Save changes to config
+wg-quick save wg0 >/dev/null 2>&1 || true
+
+# Delete files
+rm -rf -- "$d"
+echo "Client '$n' deleted successfully."

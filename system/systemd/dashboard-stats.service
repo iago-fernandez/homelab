@@ -1,0 +1,16 @@
+[Unit]
+Description=Generate dashboard metrics JSON
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+# Adjust path to where you install the script
+ExecStart=/usr/local/bin/generate_stats.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=multi-user.target

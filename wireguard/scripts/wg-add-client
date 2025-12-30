@@ -1,0 +1,80 @@
+#!/bin/bash
+# Script to add a new WireGuard client automatically
+set -euo pipefail
+
+# Ensure script is run as root
+[ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
+
+name="${1:-}"; endpoint="${2:-}"
+# Input validation
+[ -n "$name" ] || { echo "Usage: wg-add-client <name> [endpoint]"; exit 1; }
+[[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] && [[ "$name" != .* ]] && [[ "$name" != *".."* ]] || { echo "Invalid name"; exit 2; }
+
+WG=/etc/wireguard
+srv_if=wg0
+srv_conf="$WG/$srv_if.conf"
+
+# Check dependencies
+[ -f "$srv_conf" ] || { echo "Missing configuration file: $srv_conf"; exit 3; }
+command -v wg >/dev/null || { echo "Command 'wg' not found"; exit 3; }
+
+# Determine Endpoint (IP/Domain:Port)
+# Priority: Argument -> File (WG_ENDPOINT) -> Error
+[ -n "$endpoint" ] || { [ -f "$WG/WG_ENDPOINT" ] && endpoint="$(cat "$WG/WG_ENDPOINT")"; }
+[ -n "$endpoint" ] || { echo "Endpoint required (IP_or_Domain:Port)"; exit 4; }
+
+# Get Server Public Key
+# Priority: Runtime -> File fallback
+srv_pub="$(wg show "$srv_if" public-key 2>/dev/null || true)"
+[ -n "$srv_pub" ] || { [ -f "$WG/keys/server.pub" ] && srv_pub="$(tr -d '\n' < "$WG/keys/server.pub")"; }
+[ -n "$srv_pub" ] || { echo "Could not retrieve server public key"; exit 5; }
+
+# Find next available IP in 10.8.0.0/24 subnet
+used="$(wg show "$srv_if" allowed-ips 2>/dev/null | awk '{sub(/\/32$/,"",$2);print $2}')"
+for i in $(seq 2 254); do 
+    ip="10.8.0.$i"
+    grep -qx "$ip" <<<"$used" || break
+done
+[ -n "${ip:-}" ] || { echo "No free IPs available in 10.8.0.0/24"; exit 6; }
+# Create directory and keys
+dir="$WG/clients/$name"
+install -d -m700 "$dir"
+umask 077
+
+wg genkey > "$dir/private.key"
+wg pubkey < "$dir/private.key" > "$dir/public.key"
+wg genpsk > "$dir/psk.key"
+
+priv="$(tr -d '\n' < "$dir/private.key")"
+psk="$(tr -d '\n' < "$dir/psk.key")"
+pub="$(tr -d '\n' < "$dir/public.key")"
+
+# Add peer to running server and save configuration
+wg set "$srv_if" peer "$pub" preshared-key "$dir/psk.key" allowed-ips "$ip/32"
+wg-quick save "$srv_if" >/dev/null 2>&1 || true
+
+# Function to generate client config files
+gen() { # gen <mode> <filename> <allowed_ips>
+  cat >"$2"<<CONF
+[Interface]
+PrivateKey = $priv
+Address = $ip/32
+DNS = 10.8.0.1
+
+[Peer]
+PublicKey = $srv_pub
+PresharedKey = $psk
+Endpoint = $endpoint
+AllowedIPs = $3
+PersistentKeepalive = 25
+CONF
+  chmod 600 "$2"
+}
+
+# Generate Full Tunnel (Traffic goes through VPN)
+gen full  "$dir/$name-full.conf"  "0.0.0.0/0, ::/0"
+
+# Generate Split Tunnel (Only VPN and LAN traffic)
+# Note: Adjust 192.168.1.0/24 if the local network subnet changes
+gen split "$dir/$name-split.conf" "10.8.0.0/24, 192.168.1.0/24"
+echo "Success: Client '$name' created with IP $ip at $dir"

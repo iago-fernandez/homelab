@@ -1,0 +1,40 @@
+#!/bin/bash
+# Script to display WireGuard QR codes for mobile clients
+set -euo pipefail
+
+[ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
+
+n="${1:-}"
+which="${2:-both}"
+
+[ -n "$n" ] || { echo "Usage: wg-show-qr <name> [both|full|split]"; exit 1; }
+command -v qrencode >/dev/null || { echo "Error: 'qrencode' is not installed."; exit 1; }
+
+f="/etc/wireguard/clients/$n/$n-full.conf"
+s="/etc/wireguard/clients/$n/$n-split.conf"
+
+# Check if files exist
+[ -f "$f" ] || { echo "Config file not found: $f"; exit 2; }
+[ -f "$s" ] || { echo "Config file not found: $s"; exit 2; }
+
+case "$which" in
+  full)  
+      echo "=== $n (Full Tunnel) ==="
+      qrencode -t ansiutf8 < "$f"
+      ;;
+  split) 
+      echo "=== $n (Split Tunnel) ==="
+      qrencode -t ansiutf8 < "$s"
+      ;;
+  both)  
+      echo "=== $n (Full Tunnel) ==="
+      qrencode -t ansiutf8 < "$f"
+      echo
+      echo "=== $n (Split Tunnel) ==="
+      qrencode -t ansiutf8 < "$s"
+      ;;
+  *) 
+      echo "Invalid option. Use: both, full, or split"
+      exit 1
+      ;;
+esac

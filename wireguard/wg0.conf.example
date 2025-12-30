@@ -1,0 +1,22 @@
+a
+a
+# /etc/wireguard/wg0.conf
+# WireGuard Server Configuration Example
+
+[Interface]
+# VPN Internal Network
+Address = 10.8.0.1/24
+ListenPort = 51820
+PrivateKey = <SERVER_PRIVATE_KEY_REDACTED>
+
+# Firewall & NAT Rules
+# Dynamic interface detection: Finds the default route interface (e.g., eth0 or wlan0)
+# and applies Masquerade (NAT) to allow VPN clients to access the internet.
+PostUp = sh -c 'WAN=$(ip -4 route list default | awk "{print \$5; exit}"); iptables -t nat -A POSTROUTING -o "$WAN" -j MASQUERADE'
+PostDown = sh -c 'WAN=$(ip -4 route list default | awk "{print \$5; exit}"); iptables -t nat -D POSTROUTING -o "$WAN" -j MASQUERADE'
+
+# Client 1 - Mobile Phone
+[Peer]
+PublicKey = <CLIENT_PUBLIC_KEY_REDACTED>
+PresharedKey = <PRESHARED_KEY_REDACTED>
+AllowedIPs = 10.8.0.2/32

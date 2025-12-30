@@ -1,0 +1,45 @@
+
+services:
+  db:
+    image: mariadb:10.11
+    container_name: seafile-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWD}
+      - MYSQL_LOG_CONSOLE=true
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: seafile-memcached
+    entrypoint: ["memcached", "-m", "256"]
+    restart: unless-stopped
+
+  seafile:
+    image: seafileltd/seafile-mc:latest
+    container_name: seafile
+    depends_on:
+      db:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8083:80"     # Seahub (web)
+      - "127.0.0.1:8084:8082"  # File server (/seafhttp)
+    environment:
+      - DB_HOST=db
+      - DB_ROOT_PASSWD=${DB_ROOT_PASSWD}
+      - TIME_ZONE=${TZ}
+      - SEAFILE_ADMIN_EMAIL=${SEAFILE_ADMIN_EMAIL}
+      - SEAFILE_ADMIN_PASSWORD=${SEAFILE_ADMIN_PASSWORD}
+      - SEAFILE_SERVER_HOSTNAME=${SEAFILE_HOSTNAME}
+      - SEAFILE_SERVER_PROTOCOL=http
+    volumes:
+      - ./data:/shared
+    restart: unless-stopped

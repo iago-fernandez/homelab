@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HomeLab - Estado</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/app.js" defer></script>
+  <script src="../assets/status-page.js" defer></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">HomeLab</div>
+    <nav class="nav">
+      <a class="nav-link" href="../index.html">Inicio</a>
+      <a class="nav-link" href="guia.html">Guía</a>
+      <a class="nav-link active" href="estado.html">Estado</a>
+    </nav>
+  </div>
+</header>
+<main class="container">
+  <h1>Estado del Sistema</h1>
+  <p id="updated" class="muted tiny">Comprobando...</p>
+
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr><th>Servicio</th><th>Estado</th><th>Latencia</th></tr>
+      </thead>
+      <tbody id="status-body">
+        </tbody>
+    </table>
+  </div>
+  
+  <div id="cards" class="grid grid-home">
+    </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">HomeLab Dashboard</div>
+</footer>
+</body>
+</html>

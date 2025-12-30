@@ -1,0 +1,19 @@
+{
+  "generated_at": "2025-01-01T12:00:00+00:00",
+  "services": [
+    { "name": "Seafile", "code": "200", "ms": 25, "ok": true },
+    { "name": "Filebrowser", "code": "200", "ms": 10, "ok": true },
+    { "name": "Pi-hole", "code": "200", "ms": 5, "ok": true },
+    { "name": "Router", "code": "200", "ms": 4, "ok": true },
+    { "name": "WireGuard", "code": "UDP", "ms": 0, "ok": true, "note": "Puerto 51820 Abierto" }
+  ],
+  "host": {
+    "hostname": "raspberrypi",
+    "uptime": "2 semanas, 3 días, 4 horas",
+    "cpu_temp_c": "42.0",
+    "loadavg": { "1min": "0.10", "5min": "0.15", "15min": "0.12" },
+    "memoria": { "total_mb": 4096, "usada_mb": 1024, "porcentaje": 25 },
+    "disk": { "porcentaje": "15%" },
+    "vpn": { "activos": 1, "total": 5 }
+  }
+}
