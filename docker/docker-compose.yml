@@ -4,7 +4,7 @@ networks:
     driver: bridge
 
 services:
-  # Centralized dashboard
+  # Internal dashboard for local network service monitoring
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
@@ -12,20 +12,18 @@ services:
     network_mode: host
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
-      - HOMEPAGE_VAR_EXTERNAL_URL=${EXTERNAL_URL}
       - TZ=${TZ}
     volumes:
       - ../config/monitoring/homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  # Internal proxy for Cloudflare integration
+  # Internal reverse proxy for local service routing
   nginx-proxy-manager:
     image: 'jc21/nginx-proxy-manager:latest'
     container_name: nginx-proxy-manager
     restart: unless-stopped
     ports:
       - '80:80'
-      - '443:443'
     volumes:
       - ../config/proxy/nginx/data:/data
     networks:
@@ -46,7 +44,7 @@ services:
     networks:
       - proxy_net
 
-  # Database for Seafile
+  # Database backend for Seafile storage
   db:
     image: mariadb:10.11
     container_name: seafile-mysql
@@ -62,7 +60,7 @@ services:
     networks:
       - proxy_net
 
-  # Relational database for development
+  # Development database for local projects
   postgres:
     image: postgres:16-alpine
     container_name: postgres-db
@@ -76,7 +74,7 @@ services:
     networks:
       - proxy_net
 
-  # Home automation platform
+  # Home automation platform for local hardware management
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: homeassistant
@@ -87,7 +85,7 @@ services:
       - ../config/automation/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
 
-  # Media streaming server
+  # Media server for local streaming
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
@@ -103,7 +101,7 @@ services:
     networks:
       - proxy_net
 
-  # Portfolio website
+  # Static container for personal portfolio website
   portfolio:
     image: nginx:alpine
     container_name: portfolio-website
