@@ -1,45 +1,96 @@
+networks:
+  proxy_net:
+    name: proxy_net
+    driver: bridge
 
 services:
-  db:
-    image: mariadb:10.11
-    container_name: seafile-mysql
+  # Internal dashboard for local network service monitoring
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    network_mode: host
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWD}
-      - MYSQL_LOG_CONSOLE=true
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+      - TZ=${TZ}
     volumes:
-      - ./db:/var/lib/mysql
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
+      - ../config/monitoring/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  memcached:
-    image: memcached:1.6-alpine
-    container_name: seafile-memcached
-    entrypoint: ["memcached", "-m", "256"]
+  # Internal reverse proxy for local service routing
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
     restart: unless-stopped
+    ports:
+      - '80:80'
+    volumes:
+      - ../config/proxy/nginx/data:/data
+    networks:
+      - proxy_net
 
+  # Private cloud storage
   seafile:
     image: seafileltd/seafile-mc:latest
     container_name: seafile
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ${SEAFILE_DATA_DIR}:/shared
+      - ../config/storage/seafile:/opt/seafile/conf
     depends_on:
       db:
         condition: service_healthy
-      memcached:
-        condition: service_started
-    ports:
-      - "127.0.0.1:8083:80"     # Seahub (web)
-      - "127.0.0.1:8084:8082"  # File server (/seafhttp)
-    environment:
-      - DB_HOST=db
-      - DB_ROOT_PASSWD=${DB_ROOT_PASSWD}
-      - TIME_ZONE=${TZ}
-      - SEAFILE_ADMIN_EMAIL=${SEAFILE_ADMIN_EMAIL}
-      - SEAFILE_ADMIN_PASSWORD=${SEAFILE_ADMIN_PASSWORD}
-      - SEAFILE_SERVER_HOSTNAME=${SEAFILE_HOSTNAME}
-      - SEAFILE_SERVER_PROTOCOL=http
-    volumes:
-      - ./data:/shared
+    networks:
+      - proxy_net
+
+  # Database backend for Seafile storage
+  db:
+    image: mariadb:10.11
+    container_name: seafile-mysql
     restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ../config/database/mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy_net
+
+  # Development database for local projects
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ../config/database/postgres:/var/lib/postgresql/data
+    networks:
+      - proxy_net
+
+  # Home automation platform for local hardware management
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    volumes:
+      - ../config/automation/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+
+  # Static container for personal portfolio website
+  portfolio:
+    image: nginx:alpine
+    container_name: portfolio-website
+    restart: unless-stopped
+    volumes:
+      - ../config/web/portfolio:/usr/share/nginx/html:ro
+    networks:
+      - proxy_net

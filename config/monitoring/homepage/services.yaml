@@ -1,0 +1,87 @@
+# Infrastructure and core network services
+- Infrastructure:
+    - Router:
+        icon: mdi-router-wireless
+        href: http://router.lan
+        description: Main router control panel
+    - Nginx Proxy Manager:
+        icon: nginx-proxy-manager.png
+        href: http://nginx.lan
+        description: Internal proxy and domain routing
+        server: my-docker
+        container: nginx-proxy-manager
+    - Home Assistant:
+        icon: home-assistant.png
+        href: http://homeassistant.lan:8123
+        description: Central hub and hardware monitoring
+        server: my-docker
+        container: homeassistant
+
+# Application layer services
+- Services:
+    - Seafile:
+        icon: seafile.png
+        href: http://seafile.lan
+        description: Private cloud storage
+        server: my-docker
+        container: seafile
+    - PostgreSQL:
+        icon: postgresql.png
+        description: Relational database
+        server: my-docker
+        container: postgres-db
+
+# UPS and power supply monitoring
+- Power Supply:
+    - UPS Battery:
+        icon: mdi-battery-charging
+        widget:
+          type: customapi
+          url: http://127.0.0.1:8123/api/states/sensor.ups_battery_charge
+          headers:
+            Authorization: Bearer your_ha_api_token
+          mappings:
+            - field: state
+              label: Battery
+              format: percent
+    - UPS Status:
+        icon: mdi-information-outline
+        widget:
+          type: customapi
+          url: http://127.0.0.1:8123/api/states/sensor.ups_status
+          headers:
+            Authorization: Bearer your_ha_api_token
+          mappings:
+            - field: state
+              label: Status
+    - UPS Load:
+        icon: mdi-gauge
+        widget:
+          type: customapi
+          url: http://127.0.0.1:8123/api/states/sensor.ups_load
+          headers:
+            Authorization: Bearer your_ha_api_token
+          mappings:
+            - field: state
+              label: Load
+              format: percent
+    - Input Voltage:
+        icon: mdi-flash
+        widget:
+          type: customapi
+          url: http://127.0.0.1:8123/api/states/sensor.ups_input_voltage
+          headers:
+            Authorization: Bearer your_ha_api_token
+          mappings:
+            - field: state
+              label: Input
+    - Output Voltage:
+        icon: mdi-flash-outline
+        widget:
+          type: customapi
+          url: http://127.0.0.1:8123/api/states/sensor.ups_output_voltage
+          headers:
+            Authorization: Bearer your_ha_api_token
+          mappings:
+            - field: state
+              label: Output
