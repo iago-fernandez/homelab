@@ -1,40 +1,48 @@
 #!/bin/bash
-# UFW (Uncomplicated Firewall) Configuration Script
-# Policy: Default Deny Incoming / Allow Outgoing
 
-# 1. Reset previous configuration
 ufw --force reset
 
-# 2. Set default policies
 ufw default deny incoming
 ufw default allow outgoing
-ufw default deny routed  # Block routing by default (enabled later for VPN)
 
-# 3. Public Services (WAN)
-# SSH (Rate limited to prevent brute force attacks)
-ufw limit 22/tcp comment 'SSH'
-# HTTP/HTTPS (Nginx Reverse Proxy)
-ufw allow 80/tcp comment 'HTTP'
-ufw allow 443/tcp comment 'HTTPS'
-# WireGuard VPN (UDP Port)
-ufw allow 51820/udp comment 'WireGuard VPN'
+# Core Infrastructure
+ufw allow 51820/udp comment 'Wireguard VPN'
 
-# 4. Internal Services (LAN Only - 192.168.1.0/24)
-# DNS (TCP/UDP) for Pi-hole
-ufw allow from 192.168.1.0/24 to any port 53 proto udp comment 'DNS UDP LAN'
-ufw allow from 192.168.1.0/24 to any port 53 proto tcp comment 'DNS TCP LAN'
-# DHCP (If Pi-hole acts as DHCP server)
-ufw allow from 192.168.1.0/24 to any port 67 proto udp comment 'DHCP Server'
+# Hardware Discovery
+ufw allow in on eth0 to any port 5353 proto udp comment 'mDNS Discovery'
+ufw allow in on eth0 to any port 1900 proto udp comment 'SSDP Discovery'
 
-# 5. VPN Client Rules (WireGuard Subnet - 10.8.0.0/24)
-# Allow VPN clients to access Pi-hole DNS
-ufw allow from 10.8.0.0/24 to any port 53 proto udp comment 'DNS UDP VPN'
-ufw allow from 10.8.0.0/24 to any port 53 proto tcp comment 'DNS TCP VPN'
-# Allow VPN clients to SSH into the server
-ufw allow from 10.8.0.0/24 to any port 22 proto tcp comment 'SSH VPN'
+# Trusted Subnets Configuration (LAN & VPN)
+SUBNETS=("192.168.1.0/24" "10.8.0.0/24")
+for SUBNET in "${SUBNETS[@]}"; do
+    # Administration
+    ufw allow from "$SUBNET" to any port 22 proto tcp comment 'SSH Access'
+    
+    # Reverse Proxy
+    ufw allow from "$SUBNET" to any port 80 proto tcp comment 'NPM HTTP'
+    ufw allow from "$SUBNET" to any port 81 proto tcp comment 'NPM Admin'
+    ufw allow from "$SUBNET" to any port 443 proto tcp comment 'NPM HTTPS'
+    
+    # Dashboard
+    ufw allow from "$SUBNET" to any port 3000 proto tcp comment 'Homepage'
+    
+    # Hardware Monitoring
+    ufw allow from "$SUBNET" to any port 3493 proto tcp comment 'NUT Service'
+    
+    # Databases
+    ufw allow from "$SUBNET" to any port 5432 proto tcp comment 'PostgreSQL'
+    
+    # Cloud Storage
+    ufw allow from "$SUBNET" to any port 8082 proto tcp comment 'Seafile'
+    
+    # Home Automation
+    ufw allow from "$SUBNET" to any port 8123 proto tcp comment 'Home Assistant'
+done
 
-# 6. NAT / Routing Reminder
-echo "IMPORTANT: Ensure NAT is configured in /etc/ufw/before.rules to allow VPN traffic egress."
+# Docker Bridge Inter-communication
+DOCKER_SUBNET="172.18.0.0/16"
+ufw allow from "$DOCKER_SUBNET" to any port 3000 proto tcp comment 'Homepage Docker Bridge'
+ufw allow from "$DOCKER_SUBNET" to any port 8123 proto tcp comment 'Home Assistant Docker Bridge'
 
-# 7. Enable Firewall
-ufw enable
+ufw --force enable
+ufw reload
