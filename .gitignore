@@ -5,6 +5,3 @@
 *.crt
 *.pem
 wg0.conf
-/data
-/config/
-!/config/examples/
