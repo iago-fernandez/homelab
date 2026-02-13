@@ -85,22 +85,6 @@ services:
       - ../config/automation/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
 
-  # Media server for local streaming
-  jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
-    container_name: jellyfin
-    restart: unless-stopped
-    privileged: true
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ../config/media/jellyfin:/config
-      - ${MEDIA_MOUNT_PATH}:/data/media:ro
-    networks:
-      - proxy_net
-
   # Static container for personal portfolio website
   portfolio:
     image: nginx:alpine
