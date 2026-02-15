@@ -1,22 +1,27 @@
 #!/bin/bash
-# Script to remove a WireGuard client
+
+# Revokes and removes an existing WireGuard VPN client profile.
+# Unregisters the peer's public key from the active interface and purges
+# the associated configuration directory.
+
 set -euo pipefail
 
+# Enforce root privileges for interface manipulation
 [ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
 
-n="${1:-}"
-[ -n "$n" ] || { echo "Usage: wg-del-client <name>"; exit 1; }
+client_name="${1:-}"
+[ -z "$client_name" ] && { echo "Usage: wg-del-client <name>"; exit 1; }
 
-d="/etc/wireguard/clients/$n"
-[ -d "$d" ] || { echo "Client directory does not exist: $d"; exit 2; }
+client_dir="/etc/wireguard/clients/$client_name"
+[ -d "$client_dir" ] || { echo "Error: Client profile '$client_name' does not exist."; exit 1; }
 
-# Remove peer from WireGuard interface
-pub="$(cat "$d/public.key" 2>/dev/null || true)"
-[ -n "$pub" ] && wg set wg0 peer "$pub" remove || true
+# Extract public key and revoke peer access
+pub_key="$(cat "$client_dir/public.key" 2>/dev/null || true)"
+if [ -n "$pub_key" ]; then
+    wg set wg0 peer "$pub_key" remove || true
+    wg-quick save wg0 >/dev/null 2>&1 || true
+fi
 
-# Save changes to config
-wg-quick save wg0 >/dev/null 2>&1 || true
-
-# Delete files
-rm -rf -- "$d"
-echo "Client '$n' deleted successfully."
+# Purge cryptographic keys and configuration files
+rm -rf -- "$client_dir"
+echo "Client '$client_name' successfully revoked and deleted."

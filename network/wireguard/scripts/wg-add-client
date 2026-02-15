@@ -1,80 +1,92 @@
 #!/bin/bash
-# Script to add a new WireGuard client automatically
+
+# Provisions a new WireGuard VPN client profile.
+# Generates cryptographic keys, assigns an available IP address from the pool,
+# registers the peer with the active interface, and outputs configuration files.
+
 set -euo pipefail
 
-# Ensure script is run as root
+# Enforce root privileges for interface manipulation
 [ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
 
-name="${1:-}"; endpoint="${2:-}"
-# Input validation
-[ -n "$name" ] || { echo "Usage: wg-add-client <name> [endpoint]"; exit 1; }
-[[ "$name" =~ ^[A-Za-z0-9._-]+$ ]] && [[ "$name" != .* ]] && [[ "$name" != *".."* ]] || { echo "Invalid name"; exit 2; }
+name="${1:-}"
+endpoint="${2:-}"
 
-WG=/etc/wireguard
-srv_if=wg0
-srv_conf="$WG/$srv_if.conf"
+# Validate client name format
+if [ -z "$name" ] || [[ ! "$name" =~ ^[A-Za-z0-9._-]+$ ]] || [[ "$name" == .* ]] || [[ "$name" == *".."* ]]; then
+    echo "Usage: wg-add-client <name> [endpoint]"
+    echo "Name must be alphanumeric."
+    exit 1
+fi
 
-# Check dependencies
-[ -f "$srv_conf" ] || { echo "Missing configuration file: $srv_conf"; exit 3; }
-command -v wg >/dev/null || { echo "Command 'wg' not found"; exit 3; }
+WG_DIR="/etc/wireguard"
+SRV_IF="wg0"
+SRV_CONF="$WG_DIR/$SRV_IF.conf"
 
-# Determine Endpoint (IP/Domain:Port)
-# Priority: Argument -> File (WG_ENDPOINT) -> Error
-[ -n "$endpoint" ] || { [ -f "$WG/WG_ENDPOINT" ] && endpoint="$(cat "$WG/WG_ENDPOINT")"; }
-[ -n "$endpoint" ] || { echo "Endpoint required (IP_or_Domain:Port)"; exit 4; }
+[ -f "$SRV_CONF" ] || { echo "Critical: Configuration file $SRV_CONF not found."; exit 1; }
+command -v wg >/dev/null || { echo "Critical: 'wg' utility not installed."; exit 1; }
 
-# Get Server Public Key
-# Priority: Runtime -> File fallback
-srv_pub="$(wg show "$srv_if" public-key 2>/dev/null || true)"
-[ -n "$srv_pub" ] || { [ -f "$WG/keys/server.pub" ] && srv_pub="$(tr -d '\n' < "$WG/keys/server.pub")"; }
-[ -n "$srv_pub" ] || { echo "Could not retrieve server public key"; exit 5; }
+# Resolve endpoint address
+[ -z "$endpoint" ] && [ -f "$WG_DIR/WG_ENDPOINT" ] && endpoint="$(cat "$WG_DIR/WG_ENDPOINT")"
+[ -z "$endpoint" ] && { echo "Error: Endpoint required (IP_or_Domain:Port)"; exit 1; }
 
-# Find next available IP in 10.8.0.0/24 subnet
-used="$(wg show "$srv_if" allowed-ips 2>/dev/null | awk '{sub(/\/32$/,"",$2);print $2}')"
+# Retrieve server public key
+srv_pub="$(wg show "$SRV_IF" public-key 2>/dev/null || true)"
+[ -z "$srv_pub" ] && [ -f "$WG_DIR/keys/server.pub" ] && srv_pub="$(tr -d '\n' < "$WG_DIR/keys/server.pub")"
+[ -z "$srv_pub" ] && { echo "Error: Unable to retrieve server public key."; exit 1; }
+
+# Allocate the next available IP address within the defined subnet
+used_ips="$(wg show "$SRV_IF" allowed-ips 2>/dev/null | awk '{sub(/\/32$/,"",$2);print $2}')"
 for i in $(seq 2 254); do 
-    ip="10.8.0.$i"
-    grep -qx "$ip" <<<"$used" || break
+    target_ip="10.8.0.$i"
+    if ! echo "$used_ips" | grep -qx "$target_ip"; then
+        client_ip="$target_ip"
+        break
+    fi
 done
-[ -n "${ip:-}" ] || { echo "No free IPs available in 10.8.0.0/24"; exit 6; }
-# Create directory and keys
-dir="$WG/clients/$name"
-install -d -m700 "$dir"
+
+[ -z "${client_ip:-}" ] && { echo "Error: IP pool exhausted in 10.8.0.0/24 subnet."; exit 1; }
+
+# Initialize client configuration directory
+client_dir="$WG_DIR/clients/$name"
+install -d -m700 "$client_dir"
 umask 077
 
-wg genkey > "$dir/private.key"
-wg pubkey < "$dir/private.key" > "$dir/public.key"
-wg genpsk > "$dir/psk.key"
+# Generate asymmetric key pair and preshared key
+wg genkey | tee "$client_dir/private.key" | wg pubkey > "$client_dir/public.key"
+wg genpsk > "$client_dir/psk.key"
 
-priv="$(tr -d '\n' < "$dir/private.key")"
-psk="$(tr -d '\n' < "$dir/psk.key")"
-pub="$(tr -d '\n' < "$dir/public.key")"
+priv="$(cat "$client_dir/private.key")"
+psk="$(cat "$client_dir/psk.key")"
+pub="$(cat "$client_dir/public.key")"
 
-# Add peer to running server and save configuration
-wg set "$srv_if" peer "$pub" preshared-key "$dir/psk.key" allowed-ips "$ip/32"
-wg-quick save "$srv_if" >/dev/null 2>&1 || true
+# Register the new peer with the active WireGuard interface
+wg set "$SRV_IF" peer "$pub" preshared-key "$client_dir/psk.key" allowed-ips "$client_ip/32"
+wg-quick save "$SRV_IF" >/dev/null 2>&1 || true
 
-# Function to generate client config files
-gen() { # gen <mode> <filename> <allowed_ips>
-  cat >"$2"<<CONF
+# Write client configuration files
+generate_config() {
+    local mode=$1
+    local file=$2
+    local allowed_ips=$3
+    
+    cat >"$file"<<EOF
 [Interface]
 PrivateKey = $priv
-Address = $ip/32
+Address = $client_ip/32
 DNS = 10.8.0.1
 
 [Peer]
 PublicKey = $srv_pub
 PresharedKey = $psk
 Endpoint = $endpoint
-AllowedIPs = $3
+AllowedIPs = $allowed_ips
 PersistentKeepalive = 25
-CONF
-  chmod 600 "$2"
+EOF
+    chmod 600 "$file"
 }
 
-# Generate Full Tunnel (Traffic goes through VPN)
-gen full  "$dir/$name-full.conf"  "0.0.0.0/0, ::/0"
+generate_config full "$client_dir/$name-full.conf" "0.0.0.0/0, ::/0"
+generate_config split "$client_dir/$name-split.conf" "10.8.0.0/24, 192.168.1.0/24"
 
-# Generate Split Tunnel (Only VPN and LAN traffic)
-# Note: Adjust 192.168.1.0/24 if the local network subnet changes
-gen split "$dir/$name-split.conf" "10.8.0.0/24, 192.168.1.0/24"
-echo "Success: Client '$name' created with IP $ip at $dir"
+echo "Provisioning successful: Client '$name' assigned IP $client_ip."

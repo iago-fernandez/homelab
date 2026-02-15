@@ -1,40 +1,37 @@
 #!/bin/bash
-# Script to display WireGuard QR codes for mobile clients
+
+# Renders WireGuard client configurations as ANSI QR codes in the terminal
+# to facilitate rapid provisioning of mobile devices.
+
 set -euo pipefail
 
 [ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
 
-n="${1:-}"
-which="${2:-both}"
+client_name="${1:-}"
+mode="${2:-both}"
 
-[ -n "$n" ] || { echo "Usage: wg-show-qr <name> [both|full|split]"; exit 1; }
-command -v qrencode >/dev/null || { echo "Error: 'qrencode' is not installed."; exit 1; }
+[ -z "$client_name" ] && { echo "Usage: wg-show-qr <name> [both|full|split]"; exit 1; }
+command -v qrencode >/dev/null || { echo "Error: 'qrencode' utility is required."; exit 1; }
 
-f="/etc/wireguard/clients/$n/$n-full.conf"
-s="/etc/wireguard/clients/$n/$n-split.conf"
+file_full="/etc/wireguard/clients/$client_name/$client_name-full.conf"
+file_split="/etc/wireguard/clients/$client_name/$client_name-split.conf"
 
-# Check if files exist
-[ -f "$f" ] || { echo "Config file not found: $f"; exit 2; }
-[ -f "$s" ] || { echo "Config file not found: $s"; exit 2; }
+# Display configuration via standard output and QR code
+render_qr() {
+    local label=$1
+    local file=$2
+    [ -f "$file" ] || { echo "Configuration file missing: $file"; return; }
+    echo "Client Configuration: $client_name ($label)"
+    qrencode -t ansiutf8 < "$file"
+    echo
+}
 
-case "$which" in
-  full)  
-      echo "=== $n (Full Tunnel) ==="
-      qrencode -t ansiutf8 < "$f"
-      ;;
-  split) 
-      echo "=== $n (Split Tunnel) ==="
-      qrencode -t ansiutf8 < "$s"
-      ;;
-  both)  
-      echo "=== $n (Full Tunnel) ==="
-      qrencode -t ansiutf8 < "$f"
-      echo
-      echo "=== $n (Split Tunnel) ==="
-      qrencode -t ansiutf8 < "$s"
-      ;;
-  *) 
-      echo "Invalid option. Use: both, full, or split"
-      exit 1
-      ;;
+case "$mode" in
+    full)  render_qr "Full Tunnel" "$file_full" ;;
+    split) render_qr "Split Tunnel" "$file_split" ;;
+    both)  
+        render_qr "Full Tunnel" "$file_full"
+        render_qr "Split Tunnel" "$file_split"
+        ;;
+    *) echo "Invalid mode. Valid options: both, full, split"; exit 1 ;;
 esac
