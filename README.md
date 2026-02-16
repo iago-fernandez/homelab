@@ -98,8 +98,8 @@ Detailed technical documentation is available for each core component:
 
 ## Contributing
 
-Contributions are welcome. Please read the [CONTRIBUTING]() file for details on our code of conduct, engineering standards, and the process for submitting pull requests.
+Contributions are welcome. Please read the [CONTRIBUTING](CONTRIBUTING.md) file for details on our code of conduct, engineering standards, and the process for submitting pull requests.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE]() file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
