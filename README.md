@@ -70,7 +70,7 @@ Configure environment variables (populate with secure values):
 
 ```bash
 cp .env.example .env
-nano .env # or use any editor
+nano .env # use any editor
 ```
 
 Launch the stack:
@@ -85,7 +85,7 @@ Configure physical routing and internal services:
 
 * Service Initialization: Access the internal web interfaces via the local network to complete the initial application setup (e.g., initialize the Seafile administrator account, configure Nginx Proxy Manager internal routes, and set up Homepage widgets).
 
-You can finally generate and configure VPN clients (further info for the VPN configuration and usage under the [Network and VPN]() section).
+You can then generate and configure VPN clients (further info for the VPN configuration and usage in the Network and VPN section below).
 
 ## Documentation Modules
 

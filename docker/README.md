@@ -9,9 +9,9 @@ The infrastructure is composed of the following microservices:
 * Nginx Proxy Manager: Acts as the internal ingress gateway, handling reverse proxying and hostname resolution for local services within the VPN boundary.
 * Homepage: Provides a centralized dashboard for service monitoring and navigation.
 * Home Assistant: Operates in host network mode to manage local automation and hardware discovery.
-* Seafile: Enterprise-grade file synchronization and sharing platform.
-* PostgreSQL: Relational database backend explicitly provisioned to support the future development and deployment of a custom multi-platform application.
+* Seafile: File storage and synchronization, and sharing platform.
 * MariaDB: Dedicated database backend strictly allocated for the Seafile application layer.
+* PostgreSQL: Relational database backend explicitly provisioned to support the future development and deployment of a custom multi-platform application.
 
 ## Network Architecture
 

@@ -39,7 +39,7 @@
           type: customapi
           url: http://127.0.0.1:8123/api/states/sensor.ups_battery_charge
           headers:
-            Authorization: Bearer your_ha_api_token
+            Authorization: Bearer homeassistant_api_token_placeholder
           mappings:
             - field: state
               label: Battery
@@ -50,7 +50,7 @@
           type: customapi
           url: http://127.0.0.1:8123/api/states/sensor.ups_status
           headers:
-            Authorization: Bearer your_ha_api_token
+            Authorization: Bearer homeassistant_api_token_placeholder
           mappings:
             - field: state
               label: Status
@@ -60,7 +60,7 @@
           type: customapi
           url: http://127.0.0.1:8123/api/states/sensor.ups_load
           headers:
-            Authorization: Bearer your_ha_api_token
+            Authorization: Bearer homeassistant_api_token_placeholder
           mappings:
             - field: state
               label: Load
@@ -71,7 +71,7 @@
           type: customapi
           url: http://127.0.0.1:8123/api/states/sensor.ups_input_voltage
           headers:
-            Authorization: Bearer your_ha_api_token
+            Authorization: Bearer homeassistant_api_token_placeholder
           mappings:
             - field: state
               label: Input
@@ -81,7 +81,7 @@
           type: customapi
           url: http://127.0.0.1:8123/api/states/sensor.ups_output_voltage
           headers:
-            Authorization: Bearer your_ha_api_token
+            Authorization: Bearer homeassistant_api_token_placeholder
           mappings:
             - field: state
               label: Output

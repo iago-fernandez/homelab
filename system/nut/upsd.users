@@ -1,0 +1,12 @@
+# Network UPS Tools: Access Control
+
+# Administrative user for SET commands
+[admin]
+    password = <REDACTED>
+    actions = SET
+    instcmds = ALL
+
+# Monitoring user for Home Assistant and local upsmon
+[upsmon_user]
+    password = <REDACTED>
+    upsmon master
