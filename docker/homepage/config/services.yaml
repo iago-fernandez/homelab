@@ -1,0 +1,26 @@
+# Core network and infrastructure routing
+- Infraestructura:
+    - Router:
+        icon: mdi-router-wireless
+        href: http://router.lan
+        description: Panel de control del Router principal
+    - Nginx Proxy Manager:
+        icon: nginx-proxy-manager.png
+        href: http://nginx.lan
+        description: Control de dominios y seguridad proxy
+        server: my-docker
+        container: nginx-proxy-manager
+
+# Application layer and data persistence
+- Servicios:
+    - Seafile:
+        icon: seafile.png
+        href: http://seafile.lan
+        description: Almacenamiento en la nube
+        server: my-docker
+        container: seafile
+    - PostgreSQL:
+        icon: postgresql.png
+        description: Base de datos relacional
+        server: my-docker
+        container: postgres-db

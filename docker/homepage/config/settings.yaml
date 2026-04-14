@@ -1,0 +1,9 @@
+# Global localization and UI settings
+base: http://raspberry.lan
+language: es-ES
+
+# Grid layout definition
+layout:
+  - Fila Superior:
+      Infraestructura: { style: cols, columns: 3 }
+      Servicios: { style: cols, columns: 3 }
