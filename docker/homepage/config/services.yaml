@@ -1,13 +1,17 @@
-- Infrastructure:
+- Infraestructura:
+    - Router:
+        icon: router.png
+        href: http://router.lan
+        description: Puerta de enlace local
     - Seafile:
         icon: seafile.png
-        href: http://seafile.iagofernandez.com
-        description: Cloud Storage
+        href: http://seafile.lan
+        description: Almacenamiento en la nube
     - Nginx Proxy Manager:
         icon: nginx-proxy-manager.png
-        href: http://192.168.1.200:81
-        description: Reverse Proxy Admin
+        href: http://nginx.lan
+        description: Gestor de proxy inverso
     - Postgres:
         icon: postgresql.png
-        href: http://10.8.0.1:5432
-        description: Main Database
+        href: http://raspberry.lan:5432
+        description: Base de datos principal

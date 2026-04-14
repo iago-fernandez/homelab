@@ -2,7 +2,6 @@
     cpu: true
     memory: true
     disk: /
-
 - datetime:
     format:
       dateStyle: long
