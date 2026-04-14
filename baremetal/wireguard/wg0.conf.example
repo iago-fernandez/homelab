@@ -1,0 +1,17 @@
+[Interface]
+Address = 10.8.0.1/24
+PostUp = iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+ListenPort = 51820
+PrivateKey = <REDACTED_SERVER_PRIVATE_KEY>
+
+[Peer]
+PublicKey = <REDACTED_PEER_1_PUBLIC_KEY>
+PresharedKey = <REDACTED_PEER_1_PSK>
+AllowedIPs = 10.8.0.2/32
+Endpoint = <REDACTED_PEER_1_ENDPOINT_IP>:<REDACTED_PEER_1_PORT>
+
+[Peer]
+PublicKey = <REDACTED_PEER_2_PUBLIC_KEY>
+PresharedKey = <REDACTED_PEER_2_PSK>
+AllowedIPs = 10.8.0.3/32
