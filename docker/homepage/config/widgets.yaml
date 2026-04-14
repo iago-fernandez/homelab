@@ -1,13 +1,7 @@
-# Hardware and system health monitoring
 - resources:
-    label: Sistema
     cpu: true
     memory: true
     disk: /
-    uptime: true
-    temp: true
-
-# Localized date and time formatting
 - datetime:
     format:
       dateStyle: long

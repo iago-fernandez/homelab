@@ -1,9 +1,6 @@
-# Global localization and UI settings
-base: http://raspberry.lan
-language: es-ES
-
-# Grid layout definition
+title: Iago Fernandez
+headerStyle: clean
 layout:
-  - Fila Superior:
-      Infraestructura: { style: cols, columns: 3 }
-      Servicios: { style: cols, columns: 3 }
+  Infraestructura:
+    style: grid
+    columns: 4
