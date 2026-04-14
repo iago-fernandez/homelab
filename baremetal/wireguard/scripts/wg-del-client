@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+# Ensure the script runs with root privileges
+[ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
+
+n="${1:-}"
+[ -n "$n" ] || { echo "Usage: wg-del-client <name>"; exit 1; }
+
+d="/etc/wireguard/clients/$n"
+[ -d "$d" ] || { echo "Client directory $d does not exist"; exit 2; }
+
+# Remove peer from WireGuard interface
+pub="$(cat "$d/public.key" 2>/dev/null || true)"
+[ -n "$pub" ] && wg set wg0 peer "$pub" remove || true
+wg-quick save wg0 >/dev/null 2>&1 || true
+
+# Delete client files
+rm -rf -- "$d"
+echo "Client $n removed successfully"

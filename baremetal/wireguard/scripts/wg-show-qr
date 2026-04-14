@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euo pipefail
+
+# Ensure the script runs with root privileges
+[ "$EUID" -eq 0 ] || exec sudo "$0" "$@"
+
+n="${1:-}"
+which="${2:-both}"
+
+[ -n "$n" ] || { echo "Usage: wg-show-qr <name> [both|full|split]"; exit 1; }
+command -v qrencode >/dev/null || { echo "Error: qrencode is not installed"; exit 1; }
+
+f="/etc/wireguard/clients/$n/$n-full.conf"
+s="/etc/wireguard/clients/$n/$n-split.conf"
+
+case "$which" in
+  full)
+    echo "=== $n (full tunnel) ==="
+    qrencode -t ansiutf8 < "$f"
+    ;;
+  split)
+    echo "=== $n (split tunnel) ==="
+    qrencode -t ansiutf8 < "$s"
+    ;;
+  both)
+    echo "=== $n (full tunnel) ==="
+    qrencode -t ansiutf8 < "$f"
+    echo
+    echo "=== $n (split tunnel) ==="
+    qrencode -t ansiutf8 < "$s"
+    ;;
+  *)
+    echo "Invalid option: choose between both, full, or split"
+    exit 1
+    ;;
+esac
