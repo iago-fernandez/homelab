@@ -1,7 +1,32 @@
+# Environment variables and secrets
 .env
-.DS_store
-*.log
+*.env
 *.key
-*.crt
 *.pem
-wg0.conf
+homeassistanttoken
+
+# Docker volumes and persistent data
+*/data/
+*/db/
+*/config/
+*/cache/
+nginx_data/
+nginx_letsencrypt/
+postgres/
+homeassistant/
+homepage/config/
+zurg/
+media_mount/
+media_library/
+rclone_cache/
+jellyfin/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Auto-generated Homepage files and logs
+docker/homepage/config/logs/
+docker/homepage/config/bookmarks.yaml
+docker/homepage/config/kubernetes.yaml
+docker/homepage/config/proxmox.yaml

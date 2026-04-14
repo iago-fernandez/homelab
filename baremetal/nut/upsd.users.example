@@ -1,0 +1,8 @@
+[admin]
+    password = <REDACTED_ADMIN_PASSWORD>
+    actions = SET
+    instcmds = ALL
+
+[upsmon_user]
+    password = <REDACTED_UPSMON_PASSWORD>
+    upsmon master

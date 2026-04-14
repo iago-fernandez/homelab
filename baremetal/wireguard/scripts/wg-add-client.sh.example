@@ -1,0 +1,3 @@
+#!/bin/bash
+# Sanitized script template for adding WireGuard clients
+# Full implementation handles IP assignment, key generation, and split/full tunnel profiles.

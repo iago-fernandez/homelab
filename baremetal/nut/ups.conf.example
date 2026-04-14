@@ -1,10 +1,8 @@
-# Network UPS Tools: Hardware Driver Configuration
+maxretry = 3
 
-# Main UPS configuration
 [myups]
     driver = usbhid-ups
     port = auto
     vendorid = 0463
     productid = ffff
     desc = "Primary Raspberry Pi UPS"
-    maxretry = 3

@@ -4,54 +4,58 @@ networks:
     driver: bridge
 
 services:
-  # Internal dashboard for local network service monitoring
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     restart: unless-stopped
     network_mode: host
     environment:
-      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
-      - TZ=${TZ}
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.200,raspberry.lan,home.lan,localhost,127.0.0.1
+      - HOMEPAGE_VAR_EXTERNAL_URL=http://raspberry.lan
+      - TZ=Europe/Madrid
     volumes:
-      - ../config/monitoring/homepage:/app/config
+      - ./homepage/config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
 
-  # Internal reverse proxy for local service routing
   nginx-proxy-manager:
     image: 'jc21/nginx-proxy-manager:latest'
     container_name: nginx-proxy-manager
     restart: unless-stopped
     ports:
       - '80:80'
+      - '81:81'
+      - '443:443'
     volumes:
-      - ../config/proxy/nginx/data:/data
+      - ./nginx_data:/data
+      - ./nginx_letsencrypt:/etc/letsencrypt
     networks:
       - proxy_net
 
-  # Private cloud storage
   seafile:
     image: seafileltd/seafile-mc:latest
     container_name: seafile
     restart: unless-stopped
     env_file: .env
     volumes:
-      - ${SEAFILE_DATA_DIR}:/shared
-      - ../config/storage/seafile:/opt/seafile/conf
+      - /srv/seafile/data:/shared
     depends_on:
       db:
         condition: service_healthy
+      memcached:
+        condition: service_started
     networks:
       - proxy_net
 
-  # Database backend for Seafile storage
   db:
     image: mariadb:10.11
     container_name: seafile-mysql
     restart: unless-stopped
     env_file: .env
     volumes:
-      - ../config/database/mariadb:/var/lib/mysql
+      - /srv/seafile/db:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -60,7 +64,13 @@ services:
     networks:
       - proxy_net
 
-  # Development database for local projects
+  memcached:
+    image: memcached:1.6
+    container_name: seafile-memcached
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
   postgres:
     image: postgres:16-alpine
     container_name: postgres-db
@@ -68,29 +78,10 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: dev_database
+    ports:
+      - '5432:5432'
     volumes:
-      - ../config/database/postgres:/var/lib/postgresql/data
-    networks:
-      - proxy_net
-
-  # Home automation platform for local hardware management
-  homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:stable
-    container_name: homeassistant
-    restart: unless-stopped
-    privileged: true
-    network_mode: host
-    volumes:
-      - ../config/automation/homeassistant:/config
-      - /etc/localtime:/etc/localtime:ro
-
-  # Static container for personal portfolio website
-  portfolio:
-    image: nginx:alpine
-    container_name: portfolio-website
-    restart: unless-stopped
-    volumes:
-      - ../config/web/portfolio:/usr/share/nginx/html:ro
+      - ./postgres/data:/var/lib/postgresql/data
     networks:
       - proxy_net
