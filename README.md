@@ -18,6 +18,14 @@ The system is built on a hybrid architecture, combining bare-metal networking da
 * **Routing:** Nginx Proxy Manager handling internal reverse proxying and SSL termination.
 * **Hardware Management:** Network UPS Tools (NUT) running on bare metal to monitor power states and orchestrate safe shutdowns.
 
+### Core Services
+
+* **Homepage:** A secure, local dashboard providing centralized access to the infrastructure.
+* **Seafile:** A high-performance, private cloud storage solution with data syncing capabilities.
+* **PostgreSQL:** The primary relational database, securely isolated from external access.
+* **Nginx Proxy Manager:** Handles internal reverse proxy routing and SSL certificate termination.
+* **WireGuard:** A bare-metal VPN implementation ensuring secure, encrypted remote access to the homelab.
+
 ## Deployment Environment and High Availability
 
 This infrastructure is optimized for resource-constrained edge computing while maintaining enterprise-grade reliability.
