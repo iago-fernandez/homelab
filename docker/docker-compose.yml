@@ -95,6 +95,8 @@ services:
       - '3001:3001'
     env_file:
       - ./home-library-api/.env
+    volumes:
+      - ./home-library-api/uploads:/app/uploads
     depends_on:
       - postgres
     networks:
