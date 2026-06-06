@@ -1,3 +1,6 @@
 [submodule "docker/home-library-api"]
 	path = docker/home-library-api
 	url = https://github.com/iago-fernandez/home-library-api.git
+[submodule "docker/home-library-app"]
+	path = docker/home-library-app
+	url = https://github.com/iago-fernandez/home-library-app.git
