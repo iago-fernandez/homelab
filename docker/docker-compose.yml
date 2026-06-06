@@ -83,21 +83,33 @@ services:
       - '5432:5432'
     volumes:
       - ./postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - proxy_net
 
-  library_api:
+  home-library-api:
     build: ./home-library-api
-    container_name: library_api
+    container_name: home-library-api
     restart: unless-stopped
-    profiles: ["library"]
-    ports:
-      - '3001:3001'
     env_file:
       - ./home-library-api/.env
     volumes:
       - ./home-library-api/uploads:/app/uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy_net
+
+  home-library-app:
+    build: ./home-library-app
+    container_name: home-library-app
+    restart: unless-stopped
+    depends_on:
+      - home-library-api
     networks:
       - proxy_net
