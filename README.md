@@ -22,7 +22,8 @@ The system is built on a hybrid architecture, combining bare-metal networking da
 
 * **Homepage:** A secure, local dashboard providing centralized access to the infrastructure.
 * **Seafile:** A high-performance, private cloud storage solution with data syncing capabilities.
-* **PostgreSQL:** The primary relational database, securely isolated from external access.
+* **Home Library System:** A custom-engineered, multi-container full-stack application (Rust/Axum API + SvelteKit/Nginx SPA) dedicated to physical asset management.
+* **PostgreSQL:** The primary relational database, securely isolated from external access, backing both Seafile and the Home Library API.
 * **Nginx Proxy Manager:** Handles internal reverse proxy routing and SSL certificate termination.
 * **WireGuard:** A bare-metal VPN implementation ensuring secure, encrypted remote access to the homelab.
 
