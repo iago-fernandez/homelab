@@ -1,6 +1,11 @@
 title: Homelab
+port: 3000
 headerStyle: clean
+locale: en
 layout:
-  Infraestructura:
+  Infrastructure:
+    style: grid
+    columns: 4
+  Quick Links & Devices:
     style: grid
     columns: 4

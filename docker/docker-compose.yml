@@ -2,6 +2,9 @@ networks:
   proxy_net:
     name: proxy_net
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
 
 services:
   homepage:
@@ -10,9 +13,10 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
-      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.200,raspberry.lan,home.lan,localhost,127.0.0.1
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.200,192.168.1.200:3000,raspberry.lan,raspberry.lan:3000,home.lan,localhost,127.0.0.1
       - HOMEPAGE_VAR_EXTERNAL_URL=http://raspberry.lan
       - TZ=Europe/Madrid
+      - LANG=en_US.UTF-8
     volumes:
       - ./homepage/config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
