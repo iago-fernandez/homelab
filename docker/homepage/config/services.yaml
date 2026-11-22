@@ -1,17 +1,22 @@
-- Infraestructura:
+- Infrastructure:
     - Router:
         icon: router.png
         href: http://router.lan
-        description: Puerta de enlace local
+        description: Local network gateway
     - Seafile:
         icon: seafile.png
         href: http://seafile.lan
-        description: Almacenamiento en la nube
+        description: Private cloud storage & sync
     - Nginx Proxy Manager:
         icon: nginx-proxy-manager.png
         href: http://nginx.lan
-        description: Gestor de proxy inverso
+        description: Reverse proxy management
     - Postgres:
         icon: postgresql.png
-        href: http://raspberry.lan:5432
-        description: Base de datos principal
+        description: Primary relational database
+
+- Quick Links & Devices:
+    - Network Printer:
+        icon: mdi-printer
+        href: http://raspberry.lan:631
+        description: CUPS & IPP network printing service

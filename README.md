@@ -17,6 +17,7 @@ The system is built on a hybrid architecture, combining bare-metal networking da
 * **Security:** Uncomplicated Firewall (UFW) enforcing a default deny policy, restricting service access strictly to proxy routes and VPN subnets.
 * **Routing:** Nginx Proxy Manager handling internal reverse proxying and SSL termination.
 * **Hardware Management:** Network UPS Tools (NUT) running on bare metal to monitor power states and orchestrate safe shutdowns.
+* **Network Printing:** CUPS daemon and Avahi (mDNS) providing driverless IPP and AirPrint services across internal subnets.
 
 ### Core Services
 
@@ -26,6 +27,7 @@ The system is built on a hybrid architecture, combining bare-metal networking da
 * **PostgreSQL:** The primary relational database, securely isolated from external access, backing both Seafile and the Home Library API.
 * **Nginx Proxy Manager:** Handles internal reverse proxy routing and SSL certificate termination.
 * **WireGuard:** A bare-metal VPN implementation ensuring secure, encrypted remote access to the homelab.
+* **Print Server:** CUPS and Avahi mDNS daemons providing networked IPP printing and AirPrint discovery.
 
 ## Deployment Environment and High Availability
 

@@ -11,3 +11,14 @@ docker/homepage/config/logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Local certificates and keys
+certs/
+*.crt
+*.key
+*.pem
+
+# Backups and database dumps
+backups/
+*.sql
+*.sql.gz
